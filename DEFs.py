@@ -1,4 +1,4 @@
 import enum
-class Quantizers(enum.Enum):
+class Quantizer_types(enum.Enum):
     MID_RISE = 'mid-rise'
     MID_TREAD = 'mid-tread'

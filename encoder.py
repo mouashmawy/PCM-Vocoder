@@ -1,5 +1,4 @@
 from DEFs import *
-
 import wave
 import numpy as np
 import matplotlib.pyplot as plt
@@ -28,34 +27,45 @@ def sampler(audio_file:str, sampling_frequency:int):
 
         # Create the time vector and amplitude vector
         time_vector = np.arange(0, len(resampled_data)) / sampling_frequency
-        amplitude_vector = resampled_data # / (2 ** 15) # use it if you want to normalize the data
+        amplitude_vector = resampled_data  / (2 ** 15) # use it if you want to normalize the data
 
         return time_vector, amplitude_vector
     
 
+
+
 #2 The Quantizer function
-def quantizer(time, amplitude, levels_number, peak_level, qtype:Quantizers):
+def quantizer(time, amplitude, levels_number, peak_level, qtype:Quantizer_types):
     
     # Determine the step size
     delta = (2*peak_level) / levels_number
     
     # Define the quantization levels
-    if qtype == 'mid-rise':
+    if qtype == Quantizer_types.MID_RISE:
         levels = np.arange(-peak_level + delta/2, peak_level, delta)
-    elif qtype == 'mid-tread':
+    elif qtype == Quantizer_types.MID_TREAD:
         levels = np.arange(-peak_level + delta, peak_level, delta)
     else:
         raise ValueError('Invalid quantization type!')
     
     # Quantize the amplitude values
     quantized_amplitude = np.zeros_like(amplitude)
+    bits = ''
+    mse = 0
     for i in range(len(amplitude)):
         idx = np.argmin(np.abs(amplitude[i] - levels))
         quantized_amplitude[i] = levels[idx]
+        bits += f'{idx:04b}'  # convert the quantization index to a 4-bit binary string
+        mse += (amplitude[i] - levels[idx])**2
+    mse /= len(amplitude)
     
+    print(f'Stream of bits: {bits[:200]}')
+    print(f'Mean square quantization error: {mse:.4f}')
     plot_from_quantizer(time, amplitude, quantized_amplitude)
-    
+
+
     return quantized_amplitude
+
 
 def plot_from_quantizer(time, amplitude, quantized_amplitude):
     # Plot the input and quantized signals
@@ -69,6 +79,7 @@ def plot_from_quantizer(time, amplitude, quantized_amplitude):
 
 
 
+#3 The encoder function
 def encoder():
     pass
 
@@ -86,6 +97,7 @@ def main():
     time_vector, amplitude_vector = sampler('audio_warda.wav', 4*1000)
     print(time_vector,'\n\n\n\n', amplitude_vector)
 
+    quantized_x = quantizer(time_vector, amplitude_vector, 64, 1, qtype=Quantizer_types.MID_TREAD)
 
     pass
 
