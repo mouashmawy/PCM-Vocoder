@@ -80,8 +80,12 @@ def plot_from_quantizer(time, amplitude, quantized_amplitude):
 
 
 #3 The encoder function
-def encoder():
-    pass
+def encoder(bits, pulse_amp, bit_dur, enc_type):
+    if enc_type == Encoder_types.MANCHESTER:
+        pass
+
+    elif enc_type == Encoder_types.ALTERNATE_MARK_INVERSION:
+        pass
 
 
 
