@@ -2,10 +2,11 @@ from DEFs import *
 
 import wave
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 
-#1 The Sampler function, with the required sampling frequency as input.
+#1 The Sampler function
 def sampler(audio_file:str, sampling_frequency:int):
     # Open the audio file
     with wave.open(audio_file, 'rb') as wav_file:
@@ -32,10 +33,40 @@ def sampler(audio_file:str, sampling_frequency:int):
         return time_vector, amplitude_vector
     
 
+#2 The Quantizer function
+def quantizer(time, amplitude, levels_number, peak_level, qtype:Quantizers):
+    
+    # Determine the step size
+    delta = (2*peak_level) / levels_number
+    
+    # Define the quantization levels
+    if qtype == 'mid-rise':
+        levels = np.arange(-peak_level + delta/2, peak_level, delta)
+    elif qtype == 'mid-tread':
+        levels = np.arange(-peak_level + delta, peak_level, delta)
+    else:
+        raise ValueError('Invalid quantization type!')
+    
+    # Quantize the amplitude values
+    quantized_amplitude = np.zeros_like(amplitude)
+    for i in range(len(amplitude)):
+        idx = np.argmin(np.abs(amplitude[i] - levels))
+        quantized_amplitude[i] = levels[idx]
+    
+    plot_from_quantizer(time, amplitude, quantized_amplitude)
+    
+    return quantized_amplitude
 
-def quantizer(quantizer_type:Quantizers, number_of_levels:int, peak_level:int):
-    print(type(quantizer_type))
-    pass
+def plot_from_quantizer(time, amplitude, quantized_amplitude):
+    # Plot the input and quantized signals
+    plt.plot(time, amplitude, label='Input Signal')
+    plt.plot(time, quantized_amplitude, drawstyle='steps', label='Quantized Signal')
+    plt.xlabel('Time')
+    plt.ylabel('Amplitude')
+    plt.title('Quantizer Output')
+    plt.legend()
+    plt.show()
+
 
 
 def encoder():
