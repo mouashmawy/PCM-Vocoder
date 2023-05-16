@@ -162,3 +162,5 @@ cython_debug/
 
 *.wav
 *.mp3
+*.txt
+test.py

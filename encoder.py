@@ -61,13 +61,12 @@ def quantizer(time, amplitude, levels_number, peak_level, qtype:Quantizer_types)
     
     print(f'Stream of bits: {bits[:200]}')
     print(f'Mean square quantization error: {mse:.4f}')
-    plot_from_quantizer(time, amplitude, quantized_amplitude)
+    plot_quantizer(time, amplitude, quantized_amplitude)
+
+    return bits
 
 
-    return quantized_amplitude
-
-
-def plot_from_quantizer(time, amplitude, quantized_amplitude):
+def plot_quantizer(time, amplitude, quantized_amplitude):
     # Plot the input and quantized signals
     plt.plot(time, amplitude, label='Input Signal')
     plt.plot(time, quantized_amplitude, drawstyle='steps', label='Quantized Signal')
@@ -80,30 +79,91 @@ def plot_from_quantizer(time, amplitude, quantized_amplitude):
 
 
 #3 The encoder function
-def encoder(bits, pulse_amp, bit_dur, enc_type):
+def encoder(bits, pulse_amp, bit_dur, enc_type, bits_plotted=20):
+    # Convert the bit stream to a sequence of symbols according to the specified encoding
     if enc_type == Encoder_types.MANCHESTER:
-        pass
+        signal = []
+        for b in bits:
+            if b == '0':
+                signal += [1, -1]
+            else:
+                signal += [-1, 1]
+        signal = np.array(signal) 
+        print(len(signal))
 
     elif enc_type == Encoder_types.ALTERNATE_MARK_INVERSION:
-        pass
+        previousOne = 0 
+        signal = np.zeros(len(bits))
+        for ii in range(0,len(bits)):
+            if (bits[ii]=='1') and (previousOne==0):
+                signal[ii] = 1
+                previousOne=1;
+            elif (bits[ii]=='1') and (previousOne==1):
+                signal[ii]= -1
+                previousOne = 0;
+            elif (bits[ii]=='0'):
+                pass
+
+        signal *= pulse_amp
+        print(type(signal))
+
+    else:
+        raise ValueError('Invalid encoding type')
+
+      
+    plot_encoder(signal, enc_type, pulse_amp, bit_dur, bits_plotted)
+
+    return signal
 
 
 
 
+def plot_encoder(signal, enc_type, pulse_amp, bit_dur, bits_plotted=20):
+    
+    signal = np.repeat(signal, int(bit_dur)) 
+    signal = signal[:bits_plotted*int(bit_dur)]
+
+    t = np.arange(len(signal) * bit_dur, step=bit_dur)
+    plt.plot(t, signal)
+    plt.xlabel('Time')
+    plt.ylabel('Amplitude')
+    plt.title(f'{enc_type} encoding, Pulse amplitude: {pulse_amp}, Bit duration: {bit_dur}')
+    plt.show()
 
 
+def save_to_file(signal, filename):
+    with open(filename, 'w') as file:
+        for s in signal:
+            file.write(f'{s}')
+    print(f'Signal saved to {filename}')
 
 
 ###############-----MAIN SCRIPT----#####################
 
 def main():
+
+
+    # Define the input variables----------------------------------
+    #------- Sampler ---------------#
+    sampling_frequency = 8*1000
+    audio_name = 'audio_warda.wav'
+    #------- Quantizer ---------------#
+    quantizer_type = Quantizer_types.MID_RISE
+    levels_number = 256
+    peak_level = 1
+    #------- Encoder ---------------#
+    encoder_type = Encoder_types.MANCHESTER
+    pulse_amp = 1
+    bit_dur = 10
+    bits_to_plot = 20
+
     # Read the audio file and resample it to 8kHz
-    time_vector, amplitude_vector = sampler('audio_warda.wav', 4*1000)
-    print(time_vector,'\n\n\n\n', amplitude_vector)
+    time_vector, amplitude_vector = sampler(audio_name, sampling_frequency)
+    bits = quantizer(time_vector, amplitude_vector, levels_number, peak_level, quantizer_type)
+    encoded_signal = encoder(bits, pulse_amp, bit_dur, encoder_type, bits_to_plot)
+    save_to_file(encoded_signal, 'encoded_signal.txt')
 
-    quantized_x = quantizer(time_vector, amplitude_vector, 64, 1, qtype=Quantizer_types.MID_TREAD)
-
-    pass
+    
 
 
 
