@@ -2,7 +2,7 @@ from DEFs import *
 import wave
 import numpy as np
 import matplotlib.pyplot as plt
-
+from variables import *
 
 
 #1 The Sampler function
@@ -84,7 +84,7 @@ def encoder(bits, pulse_amp, bit_dur, enc_type, bits_plotted=20):
     if enc_type == Encoder_types.MANCHESTER:
         signal = []
         for b in bits:
-            if b == '0':
+            if b == '1':
                 signal += [1, -1]
             else:
                 signal += [-1, 1]
@@ -92,15 +92,15 @@ def encoder(bits, pulse_amp, bit_dur, enc_type, bits_plotted=20):
         print(len(signal))
 
     elif enc_type == Encoder_types.ALTERNATE_MARK_INVERSION:
-        previousOne = 0 
+        flag = 0 
         signal = np.zeros(len(bits))
         for ii in range(0,len(bits)):
-            if (bits[ii]=='1') and (previousOne==0):
+            if (bits[ii]=='1') and (flag==0):
                 signal[ii] = 1
-                previousOne=1;
-            elif (bits[ii]=='1') and (previousOne==1):
+                flag=1;
+            elif (bits[ii]=='1') and (flag==1):
                 signal[ii]= -1
-                previousOne = 0;
+                flag = 0;
             elif (bits[ii]=='0'):
                 pass
 
@@ -142,22 +142,8 @@ def save_to_file(signal, filename):
 
 def main():
 
+    # All the variables are defined in variables.py file
 
-    # Define the input variables----------------------------------
-    #------- Sampler ---------------#
-    sampling_frequency = 8*1000
-    audio_name = 'audio_warda.wav'
-    #------- Quantizer ---------------#
-    quantizer_type = Quantizer_types.MID_RISE
-    levels_number = 256
-    peak_level = 1
-    #------- Encoder ---------------#
-    encoder_type = Encoder_types.MANCHESTER
-    pulse_amp = 1
-    bit_dur = 10
-    bits_to_plot = 20
-
-    # Read the audio file and resample it to 8kHz
     time_vector, amplitude_vector = sampler(audio_name, sampling_frequency)
     bits = quantizer(time_vector, amplitude_vector, levels_number, peak_level, quantizer_type)
     encoded_signal = encoder(bits, pulse_amp, bit_dur, encoder_type, bits_to_plot)
