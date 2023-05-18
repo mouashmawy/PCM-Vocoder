@@ -7,6 +7,7 @@ from variables import *
 
 ###############-----DECODING PART----#####################
 def decoder():
+    # inverse all the steps in the encoder
     pass
 
 
