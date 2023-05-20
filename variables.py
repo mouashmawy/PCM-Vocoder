@@ -1,5 +1,5 @@
 from DEFs import *
-
+from encoder import *
 # Define the input variables----------------------------------
 #------- Sampler ---------------#
 sampling_frequency = 8*1000
@@ -13,3 +13,26 @@ encoder_type = Encoder_types.MANCHESTER
 pulse_amp = 1
 bit_dur = 10
 bits_to_plot = 50
+
+
+
+###############-----MAIN SCRIPT----#####################
+
+def main():
+
+    # All the variables are defined in variables.py file
+
+    time_vector, amplitude_vector = sampler(audio_name, sampling_frequency)
+    bits = quantizer(time_vector, amplitude_vector, levels_number, peak_level, quantizer_type)
+    encoded_signal = encoder(bits, pulse_amp, bit_dur, encoder_type, bits_to_plot)
+    #save_to_file(encoded_signal, 'encoded_signal.txt')
+
+    decoded_bits = decoder(encoded_signal, encoder_type, pulse_amp)
+    decoded_samples = convering_from_bits_to_samples(decoded_bits, levels_number, peak_level, quantizer_type)
+    #plot_quantizer(time_vector, amplitude_vector, decoded_samples)
+    
+
+
+
+if __name__ == '__main__':
+    main()

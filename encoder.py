@@ -3,7 +3,7 @@ import wave
 import numpy as np
 import matplotlib.pyplot as plt
 from variables import *
-
+from textwrap import wrap
 
 #1 The Sampler function
 def sampler(audio_file:str, sampling_frequency:int):
@@ -55,18 +55,50 @@ def quantizer(time, amplitude, levels_number, peak_level, qtype:Quantizer_types)
     for i in range(len(amplitude)):
         idx = np.argmin(np.abs(amplitude[i] - levels))
         quantized_amplitude[i] = levels[idx]
+        if i<20:
+            #print(idx)
+            pass
         bits += f'{idx:04b}'  # convert the quantization index to a 4-bit binary string
         mse += (amplitude[i] - levels[idx])**2
     mse /= len(amplitude)
     
     print(f'Stream of bits: {bits[:200]}')
+    print(f'quant: {quantized_amplitude[:20]}')
     print(f'Mean square quantization error: {mse:.4f}')
     plot_quantizer(time, amplitude, quantized_amplitude)
 
     return bits
 
 
+#taking the 32-bits and convert it to samples
+def convering_from_bits_to_samples(bits,levels_number, peak_level, qtype:Quantizer_types):
+    delta = (2*peak_level) / levels_number
+    if qtype == Quantizer_types.MID_RISE:
+        levels = np.arange(-peak_level + delta/2, peak_level, delta)
+    elif qtype == Quantizer_types.MID_TREAD:
+        levels = np.arange(-peak_level + delta, peak_level, delta)
+    else:
+        raise ValueError('Invalid quantization type!')
+
+    print(00)
+    decimals = np.zeros(len(bits)//8+1)
+    for i in range(0,len(bits),8):
+        idx = int(bits[i:i+8],2)
+        dec = levels[idx]
+        decimals[int(i//8)] = dec
+
+    print(decimals[:20])
+    return decimals
+
+
 def plot_quantizer(time, amplitude, quantized_amplitude):
+
+
+    min_len = min(len(time), len(amplitude), len(quantized_amplitude))
+    time = time[:min_len]
+    amplitude = amplitude[:min_len]
+    quantized_amplitude = quantized_amplitude[:min_len]
+
     # Plot the input and quantized signals
     plt.plot(time, amplitude, label='Input Signal')
     plt.plot(time, quantized_amplitude, drawstyle='steps', label='Quantized Signal')
@@ -138,20 +170,52 @@ def save_to_file(signal, filename):
     print(f'Signal saved to {filename}')
 
 
-###############-----MAIN SCRIPT----#####################
+def decoder(signal, enc_type, pulse_amp):
+    # Convert the bit stream to a sequence of symbols according to the specified encoding
 
-def main():
-
-    # All the variables are defined in variables.py file
-
-    time_vector, amplitude_vector = sampler(audio_name, sampling_frequency)
-    bits = quantizer(time_vector, amplitude_vector, levels_number, peak_level, quantizer_type)
-    encoded_signal = encoder(bits, pulse_amp, bit_dur, encoder_type, bits_to_plot)
-    save_to_file(encoded_signal, 'encoded_signal.txt')
-
+    signal /= pulse_amp
+    bits=''
+    if enc_type == Encoder_types.MANCHESTER:
+        for i in range(0,len(signal),2):
+            if signal[i]==1:
+                bits+='1'
+            elif signal[i]==-1:
+                bits+='0'
+            else:
+                pass
     
 
 
+    elif enc_type == Encoder_types.ALTERNATE_MARK_INVERSION:
+        for i in range(0,len(signal)):
+            if signal[i]==1:
+                bits+='1'
+            elif signal[i]==-1:
+                bits+='1'
+            else:
+                bits+='0'
 
-if __name__ == '__main__':
-    main()
+    else:
+        raise ValueError('Invalid encoding type')
+    
+    print(bits[:200])
+    return bits
+
+
+def writing_wav_file():
+    with wave.open('output3.wav', 'w') as wavfile2:
+
+    x1 = wav_file.getnchannels()
+    x2 = wav_file.getsampwidth()
+    x3 = wav_file.getframerate()
+    x4 = wav_file.getnframes()
+
+
+    print('x1: ', x1, 'x2: ', x2, 'x3: ', x3, 'x4: ', x4)
+    wavfile2.setnchannels(x1)
+    wavfile2.setsampwidth(x2)
+    wavfile2.setframerate(sampling_frequency)
+    wavfile2.setnframes(int(x4*sampling_frequency/sample_rate)+1)
+
+    # Convert the numpy array to bytes and write to the wave file
+    wavfile2.writeframes(amplitude_vector.tobytes())
