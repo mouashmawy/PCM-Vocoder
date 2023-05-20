@@ -1,8 +1,9 @@
 from DEFs import *
 from encoder import *
+from decoder import *
 # Define the input variables----------------------------------
 #------- Sampler ---------------#
-sampling_frequency = 8*1000
+sampling_frequency = 24*1000
 audio_name = 'audio_warda.wav'
 #------- Quantizer ---------------#
 quantizer_type = Quantizer_types.MID_RISE
@@ -23,14 +24,19 @@ def main():
     # All the variables are defined in variables.py file
 
     time_vector, amplitude_vector = sampler(audio_name, sampling_frequency)
-    bits = quantizer(time_vector, amplitude_vector, levels_number, peak_level, quantizer_type)
-    encoded_signal = encoder(bits, pulse_amp, bit_dur, encoder_type, bits_to_plot)
+    #bits = quantizer(time_vector, amplitude_vector, levels_number, peak_level, quantizer_type)
+    #encoded_signal = encoder(bits, pulse_amp, bit_dur, encoder_type, bits_to_plot)
     #save_to_file(encoded_signal, 'encoded_signal.txt')
 
-    decoded_bits = decoder(encoded_signal, encoder_type, pulse_amp)
-    decoded_samples = convering_from_bits_to_samples(decoded_bits, levels_number, peak_level, quantizer_type)
-    #plot_quantizer(time_vector, amplitude_vector, decoded_samples)
-    writing_wav_file(amplitude_vector, sampling_frequency, 'decoded_audio.wav')
+    #decoded_bits = decoder(encoded_signal, encoder_type, pulse_amp)
+    #decoded_samples = convering_from_bits_to_samples(decoded_bits, levels_number, peak_level, quantizer_type)
+    #amplitude_vector = amplitude_vector * (10)
+    #amplitude_vector = amplitude_vector.astype(np.int16)
+    quant = quantizer2(time_vector, amplitude_vector, levels_number, peak_level, quantizer_type)
+
+    plot_quantizer(time_vector, amplitude_vector, quant)
+
+    #writing_wav_file(decoded_samples, sampling_frequency, 'decoded_audio2.wav')
     
 
 

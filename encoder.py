@@ -70,25 +70,40 @@ def quantizer(time, amplitude, levels_number, peak_level, qtype:Quantizer_types)
     return bits
 
 
-#taking the 32-bits and convert it to samples
-def convering_from_bits_to_samples(bits,levels_number, peak_level, qtype:Quantizer_types):
+#2 The Quantizer function
+def quantizer2(time, amplitude, levels_number, peak_level, qtype:Quantizer_types):
+    
+    # Determine the step size
     delta = (2*peak_level) / levels_number
+    
+    # Define the quantization levels
     if qtype == Quantizer_types.MID_RISE:
         levels = np.arange(-peak_level + delta/2, peak_level, delta)
     elif qtype == Quantizer_types.MID_TREAD:
         levels = np.arange(-peak_level + delta, peak_level, delta)
     else:
         raise ValueError('Invalid quantization type!')
+    
+    # Quantize the amplitude values
+    quantized_amplitude = np.zeros_like(amplitude)
+    bits = ''
+    mse = 0
+    for i in range(len(amplitude)):
+        idx = np.argmin(np.abs(amplitude[i] - levels))
+        quantized_amplitude[i] = levels[idx]
+        if i<20:
+            #print(idx)
+            pass
+        bits += f'{idx:04b}'  # convert the quantization index to a 4-bit binary string
+        mse += (amplitude[i] - levels[idx])**2
+    mse /= len(amplitude)
+    
+    print(f'Stream of bits: {bits[:200]}')
+    print(f'quant: {quantized_amplitude[:20]}')
+    print(f'Mean square quantization error: {mse:.4f}')
+    #plot_quantizer(time, amplitude, quantized_amplitude)
 
-    print(00)
-    decimals = np.zeros(len(bits)//8+1)
-    for i in range(0,len(bits),8):
-        idx = int(bits[i:i+8],2)
-        dec = levels[idx]
-        decimals[int(i//8)] = dec
-
-    print(decimals[:20])
-    return decimals
+    return bits
 
 
 def plot_quantizer(time, amplitude, quantized_amplitude):
@@ -98,6 +113,7 @@ def plot_quantizer(time, amplitude, quantized_amplitude):
     time = time[:min_len]
     amplitude = amplitude[:min_len]
     quantized_amplitude = quantized_amplitude[:min_len]
+    #quantized_amplitude = quantized_amplitude / (2 ** 15)
 
     # Plot the input and quantized signals
     plt.plot(time, amplitude, label='Input Signal')
@@ -136,7 +152,7 @@ def encoder(bits, pulse_amp, bit_dur, enc_type, bits_plotted=20):
             elif (bits[ii]=='0'):
                 pass
 
-        signal *= pulse_amp
+        #signal *= pulse_amp
         print(type(signal))
 
     else:
@@ -170,46 +186,3 @@ def save_to_file(signal, filename):
     print(f'Signal saved to {filename}')
 
 
-def decoder(signal, enc_type, pulse_amp):
-    # Convert the bit stream to a sequence of symbols according to the specified encoding
-
-    #signal /= pulse_amp
-    bits=''
-    if enc_type == Encoder_types.MANCHESTER:
-        for i in range(0,len(signal),2):
-            if signal[i]==1:
-                bits+='1'
-            elif signal[i]==-1:
-                bits+='0'
-            else:
-                pass
-    
-
-
-    elif enc_type == Encoder_types.ALTERNATE_MARK_INVERSION:
-        for i in range(0,len(signal)):
-            if signal[i]==1:
-                bits+='1'
-            elif signal[i]==-1:
-                bits+='1'
-            else:
-                bits+='0'
-
-    else:
-        raise ValueError('Invalid encoding type')
-    
-    print(bits[:200])
-    return bits
-
-
-def writing_wav_file(signal, sampling_frequency, filename):
-    with wave.open(filename, 'w') as wavfile2:
-
-
-        wavfile2.setnchannels(2)
-        wavfile2.setsampwidth(2)
-        wavfile2.setframerate(sampling_frequency)
-        wavfile2.setnframes(len(signal))
-
-        # Convert the numpy array to bytes and write to the wave file
-        wavfile2.writeframes(signal.tobytes())
