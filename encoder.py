@@ -3,7 +3,8 @@ import wave
 import numpy as np
 import matplotlib.pyplot as plt
 from variables import *
-
+from binary_converting import *
+import textwrap
 
 #1 The Sampler function
 def sampler(audio_file:str, sampling_frequency:int):
@@ -28,6 +29,27 @@ def sampler(audio_file:str, sampling_frequency:int):
         # Create the time vector and amplitude vector
         time_vector = np.arange(0, len(resampled_data)) / sampling_frequency
         amplitude_vector = resampled_data  / (2 ** 15) # use it if you want to normalize the data
+
+
+        # with wave.open('output3.wav', 'w') as wavfile2:
+
+        #     x1 = wav_file.getnchannels()
+        #     x2 = wav_file.getsampwidth()
+        #     x3 = wav_file.getframerate()
+        #     x4 = wav_file.getnframes()
+
+
+        #     print('x1: ', x1, 'x2: ', x2, 'x3: ', x3, 'x4: ', x4)
+        #     wavfile2.setnchannels(x1)
+        #     wavfile2.setsampwidth(x2)
+        #     wavfile2.setframerate(sampling_frequency)
+        #     wavfile2.setnframes(int(x4*sampling_frequency/sample_rate)+1)
+
+        #     # Convert the numpy array to bytes and write to the wave file
+        #     wavfile2.writeframes(amplitude_vector.tobytes())
+
+
+
 
         return time_vector, amplitude_vector
     
@@ -55,15 +77,32 @@ def quantizer(time, amplitude, levels_number, peak_level, qtype:Quantizer_types)
     for i in range(len(amplitude)):
         idx = np.argmin(np.abs(amplitude[i] - levels))
         quantized_amplitude[i] = levels[idx]
-        bits += f'{idx:04b}'  # convert the quantization index to a 4-bit binary string
+        bits += f'{idx:08b}'  # convert the quantization index to a 4-bit binary string
+        #print(f'{idx:32b}')
         mse += (amplitude[i] - levels[idx])**2
+        if i<10:
+            print("qqqqqqqqqqqqqqqqqq",idx)
     mse /= len(amplitude)
     
     print(f'Stream of bits: {bits[:200]}')
     print(f'Mean square quantization error: {mse:.4f}')
-    plot_quantizer(time, amplitude, quantized_amplitude)
+    #plot_quantizer(time, amplitude, quantized_amplitude)
+    
 
     return bits
+
+
+#taking the 32-bits and convert it to samples
+def convering_from_bits_to_samples(bits):
+    print(00)
+    BitsSamples = textwrap.wrap(bits, 8)
+    print(8)
+    print('bits samples', BitsSamples[:10])
+    sampledSignal = [int(i, 2) for i in np.array(BitsSamples)]
+    print('sampled', sampledSignal[:10], 'len is ', len(sampledSignal))
+    return sampledSignal
+
+
 
 
 def plot_quantizer(time, amplitude, quantized_amplitude):
@@ -146,8 +185,10 @@ def main():
 
     time_vector, amplitude_vector = sampler(audio_name, sampling_frequency)
     bits = quantizer(time_vector, amplitude_vector, levels_number, peak_level, quantizer_type)
-    encoded_signal = encoder(bits, pulse_amp, bit_dur, encoder_type, bits_to_plot)
-    save_to_file(encoded_signal, 'encoded_signal.txt')
+    x = convering_from_bits_to_samples(bits)
+    print('x ', x[:10])
+    #encoded_signal = encoder(bits, pulse_amp, bit_dur, encoder_type, bits_to_plot)
+    #save_to_file(encoded_signal, 'encoded_signal.txt')
 
     
 
