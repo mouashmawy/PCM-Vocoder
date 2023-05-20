@@ -30,6 +30,7 @@ def main():
     decoded_bits = decoder(encoded_signal, encoder_type, pulse_amp)
     decoded_samples = convering_from_bits_to_samples(decoded_bits, levels_number, peak_level, quantizer_type)
     #plot_quantizer(time_vector, amplitude_vector, decoded_samples)
+    writing_wav_file(amplitude_vector, sampling_frequency, 'decoded_audio.wav')
     
 
 

@@ -65,7 +65,7 @@ def quantizer(time, amplitude, levels_number, peak_level, qtype:Quantizer_types)
     print(f'Stream of bits: {bits[:200]}')
     print(f'quant: {quantized_amplitude[:20]}')
     print(f'Mean square quantization error: {mse:.4f}')
-    plot_quantizer(time, amplitude, quantized_amplitude)
+    #plot_quantizer(time, amplitude, quantized_amplitude)
 
     return bits
 
@@ -143,7 +143,7 @@ def encoder(bits, pulse_amp, bit_dur, enc_type, bits_plotted=20):
         raise ValueError('Invalid encoding type')
 
       
-    plot_encoder(signal, enc_type, pulse_amp, bit_dur, bits_plotted)
+    #plot_encoder(signal, enc_type, pulse_amp, bit_dur, bits_plotted)
 
     return signal
 
@@ -173,7 +173,7 @@ def save_to_file(signal, filename):
 def decoder(signal, enc_type, pulse_amp):
     # Convert the bit stream to a sequence of symbols according to the specified encoding
 
-    signal /= pulse_amp
+    #signal /= pulse_amp
     bits=''
     if enc_type == Encoder_types.MANCHESTER:
         for i in range(0,len(signal),2):
@@ -202,20 +202,14 @@ def decoder(signal, enc_type, pulse_amp):
     return bits
 
 
-def writing_wav_file():
-    with wave.open('output3.wav', 'w') as wavfile2:
-
-    x1 = wav_file.getnchannels()
-    x2 = wav_file.getsampwidth()
-    x3 = wav_file.getframerate()
-    x4 = wav_file.getnframes()
+def writing_wav_file(signal, sampling_frequency, filename):
+    with wave.open(filename, 'w') as wavfile2:
 
 
-    print('x1: ', x1, 'x2: ', x2, 'x3: ', x3, 'x4: ', x4)
-    wavfile2.setnchannels(x1)
-    wavfile2.setsampwidth(x2)
-    wavfile2.setframerate(sampling_frequency)
-    wavfile2.setnframes(int(x4*sampling_frequency/sample_rate)+1)
+        wavfile2.setnchannels(2)
+        wavfile2.setsampwidth(2)
+        wavfile2.setframerate(sampling_frequency)
+        wavfile2.setnframes(len(signal))
 
-    # Convert the numpy array to bytes and write to the wave file
-    wavfile2.writeframes(amplitude_vector.tobytes())
+        # Convert the numpy array to bytes and write to the wave file
+        wavfile2.writeframes(signal.tobytes())
